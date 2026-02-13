@@ -15,7 +15,19 @@
     <div class="container">
         <span class="navbar-brand fw-semibold">АСУ ТП</span>
         <div class="ms-auto">
+            <!-- Ссылка на сотрудников всегда видна -->
             <a class="btn btn-outline-light btn-sm" href="{% url 'employees' %}">Сотрудники</a>
+            
+            <!-- Динамическое меню -->
+            {% if user.is_authenticated %}
+                <!-- Для авторизованных: заглушка профиля и выход -->
+                <a class="btn btn-outline-light btn-sm ms-2" href="#">Профиль ({{ user.username }})</a>
+                <a class="btn btn-outline-light btn-sm ms-2" href="{% url 'logout' %}">Выход</a>
+            {% else %}
+                <!-- Для неавторизованных: регистрация и вход -->
+                <a class="btn btn-outline-light btn-sm ms-2" href="{% url 'register' %}">Регистрация</a>
+                <a class="btn btn-outline-light btn-sm ms-2" href="{% url 'login' %}">Вход</a>
+            {% endif %}
         </div>
     </div>
 </nav>

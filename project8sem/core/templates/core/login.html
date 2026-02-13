@@ -25,9 +25,11 @@
                 </form>
 
                 <div class="text-center">
+                    {% if not user.is_authenticated %}
                     <a href="{% url 'register' %}" class="link-secondary">
                         Регистрация нового сотрудника
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

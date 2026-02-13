@@ -24,6 +24,11 @@ class EmployeeModelTests(TestCase):
 class RegisterViewTests(TestCase):
     def setUp(self):
         self.client = Client()
+        # Создаём пользователя для тестов авторизации
+        self.user = User.objects.create_user(
+            username="existing_user",
+            password="12345",
+        )
 
     def test_register_page_available(self):
         response = self.client.get(reverse("register"))
@@ -47,6 +52,13 @@ class RegisterViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(User.objects.filter(username="petrov").exists())
         self.assertTrue(Employee.objects.filter(user__username="petrov").exists())
+
+    def test_register_redirect_if_authenticated(self):
+        """Авторизованные пользователи при GET /register/ перенаправляются на основной раздел."""
+        self.client.login(username="existing_user", password="12345")
+        response = self.client.get(reverse("register"))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("employees"))
 
 
 class LoginViewTests(TestCase):
@@ -77,6 +89,38 @@ class LoginViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "core/login.html")
+
+
+class LogoutViewTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username="logout_user",
+            password="12345",
+        )
+
+    def test_logout_redirects_to_login(self):
+        """После выхода пользователь перенаправляется на страницу входа."""
+        self.client.login(username="logout_user", password="12345")
+        response = self.client.get(reverse("logout"))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("login"))
+
+    def test_after_logout_user_not_authenticated(self):
+        """После выхода запрос от того же клиента идёт без авторизации."""
+        self.client.login(username="logout_user", password="12345")
+        self.client.get(reverse("logout"))
+        response = self.client.get(reverse("employees"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response.url)
+
+    def test_logout_button_visible_when_authenticated(self):
+        """На странице сотрудников у авторизованного пользователя есть кнопка Выход."""
+        self.client.login(username="logout_user", password="12345")
+        response = self.client.get(reverse("employees"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Выход")
+        self.assertContains(response, reverse("logout"))
 
 
 class EmployeesViewTests(TestCase):

@@ -1,10 +1,10 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import ListView, TemplateView
+from django.views.generic import ListView
 
 from .models import Employee
 
@@ -23,6 +23,7 @@ class UserLoginView(View):
         )
         if user is not None:
             login(request, user)
+            # Пример работы с сессией
             request.session["user_id"] = user.id
             request.session["username"] = user.username
             return redirect("employees")
@@ -34,14 +35,27 @@ class UserLoginView(View):
         )
 
 
+class UserLogoutView(View):
+    """Выход из системы. Редирект на страницу входа."""
+
+    def get(self, request):
+        logout(request)
+        return redirect("login")
+
+
 class UserRegisterView(View):
     template_name = "core/register.html"
     success_url = reverse_lazy("login")
 
     def get(self, request):
-        return self.render_to_response()
+        if request.user.is_authenticated:
+            return redirect("employees")
+        return render(request, self.template_name)
 
     def post(self, request):
+        if request.user.is_authenticated:
+            return redirect("employees")
+
         user = User.objects.create_user(
             username=request.POST.get("username"),
             password=request.POST.get("password"),
@@ -56,12 +70,6 @@ class UserRegisterView(View):
         )
 
         return redirect(self.success_url)
-
-    def render_to_response(self, **context):
-        return TemplateView.as_view(
-            template_name=self.template_name,
-            extra_context=context,
-        )(self.request)
 
 
 class EmployeeListView(LoginRequiredMixin, ListView):

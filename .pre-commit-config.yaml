@@ -22,18 +22,18 @@ repos:
           set -e
 
           echo "Starting docker containers..."
-          docker compose up --build -d
+          docker-compose up --build -d
 
           echo "Waiting for database..."
           sleep 5
 
           echo "Running tests with coverage..."
-          docker compose exec -T web coverage run manage.py test
-          docker compose exec -T web coverage report --fail-under=75
+          docker-compose exec -T web coverage run manage.py test
+          docker-compose exec -T web coverage report --fail-under=75
 
           echo "Cleaning coverage artifacts..."
-          docker compose exec -T web rm -f .coverage coverage.json || true
+          docker-compose exec -T web rm -f .coverage coverage.json || true
 
           echo "Stopping containers..."
-          docker compose down
+          docker-compose down
           '
