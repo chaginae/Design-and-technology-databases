@@ -41,6 +41,7 @@ class RegisterViewTests(TestCase):
             {
                 "username": "petrov",
                 "password": "12345",
+                "password_confirm": "12345",
                 "first_name": "Петр",
                 "last_name": "Петров",
                 "position": "Оператор",
@@ -52,6 +53,103 @@ class RegisterViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(User.objects.filter(username="petrov").exists())
         self.assertTrue(Employee.objects.filter(user__username="petrov").exists())
+
+    def test_register_password_mismatch_stays_on_page(self):
+        """При несовпадении паролей пользователь остаётся на странице регистрации."""
+        response = self.client.post(
+            reverse("register"),
+            {
+                "username": "newuser",
+                "password": "12345",
+                "password_confirm": "54321",
+                "first_name": "Иван",
+                "last_name": "Иванов",
+                "position": "Инженер",
+                "department": "Цех 1",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "core/register.html")
+        self.assertFalse(User.objects.filter(username="newuser").exists())
+
+    def test_register_password_mismatch_shows_error(self):
+        """При несовпадении паролей отображается сообщение об ошибке."""
+        response = self.client.post(
+            reverse("register"),
+            {
+                "username": "u",
+                "password": "a",
+                "password_confirm": "b",
+                "first_name": "",
+                "last_name": "",
+                "position": "",
+                "department": "",
+            },
+        )
+        self.assertContains(response, "Пароли не совпадают")
+
+    def test_register_saves_date_of_birth_and_gender(self):
+        """Регистрация сохраняет дату рождения и пол в профиле сотрудника."""
+        self.client.post(
+            reverse("register"),
+            {
+                "username": "sidorov",
+                "password": "12345",
+                "password_confirm": "12345",
+                "first_name": "Сидор",
+                "last_name": "Сидоров",
+                "date_of_birth": "15.03.1990",
+                "gender": "Мужской",
+                "position": "Техник",
+                "department": "ОТК",
+            },
+            follow=True,
+        )
+        emp = Employee.objects.get(user__username="sidorov")
+        self.assertEqual(emp.date_of_birth.year, 1990)
+        self.assertEqual(emp.date_of_birth.month, 3)
+        self.assertEqual(emp.date_of_birth.day, 15)
+        self.assertEqual(emp.gender, "Мужской")
+
+    def test_register_invalid_date_shows_error(self):
+        """При неверном формате даты отображается сообщение об ошибке."""
+        response = self.client.post(
+            reverse("register"),
+            {
+                "username": "u",
+                "password": "12345",
+                "password_confirm": "12345",
+                "first_name": "А",
+                "last_name": "Б",
+                "date_of_birth": "31.13.2000",
+                "gender": "",
+                "position": "П",
+                "department": "Д",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Неверный формат даты")
+        self.assertFalse(User.objects.filter(username="u").exists())
+
+    def test_register_invalid_gender_shows_error(self):
+        """При недопустимом значении пола отображается сообщение об ошибке."""
+        response = self.client.post(
+            reverse("register"),
+            {
+                "username": "u",
+                "password": "12345",
+                "password_confirm": "12345",
+                "first_name": "А",
+                "last_name": "Б",
+                "date_of_birth": "",
+                "gender": "Неизвестно",
+                "position": "П",
+                "department": "Д",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Укажите пол")
+        self.assertFalse(User.objects.filter(username="u").exists())
 
     def test_register_redirect_if_authenticated(self):
         """Авторизованные пользователи при GET /register/ перенаправляются на основной раздел."""

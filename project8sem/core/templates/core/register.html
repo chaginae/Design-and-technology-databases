@@ -8,6 +8,9 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger" role="alert">{{ error }}</div>
+                {% endif %}
                 <form method="post">
                     {% csrf_token %}
 
@@ -30,6 +33,26 @@
                     <div class="mb-3">
                         <label class="form-label">Пароль</label>
                         <input type="password" class="form-control" name="password">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Подтверждение пароля</label>
+                        <input type="password" class="form-control" name="password_confirm">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Дата рождения</label>
+                            <input class="form-control" name="date_of_birth" placeholder="ДД.ММ.ГГГГ">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Пол</label>
+                            <select class="form-select" name="gender">
+                                <option value="">— выберите —</option>
+                                {% for choice in gender_choices %}
+                                <option value="{{ choice }}">{{ choice }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
 
                     <hr class="my-4">
