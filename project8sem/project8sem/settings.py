@@ -78,6 +78,7 @@ WSGI_APPLICATION = 'project8sem.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# Подключение под отдельной ролью БД (django_app), не под суперпользователем (задание 5).
 
 DATABASES = {
     "default": {
