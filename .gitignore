@@ -1,4 +1,5 @@
 env/
+venv/
 my_django_project.egg-info/
 build/
 

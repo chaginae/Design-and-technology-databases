@@ -13,23 +13,26 @@
                     {% for error in errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                 </div>
                 {% endif %}
-                <form method="post">
+                <form method="post" id="register-form">
                     {% csrf_token %}
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Имя</label>
-                            <input class="form-control" name="first_name">
+                            <input class="form-control" name="first_name"
+                                value="{{ post_data.first_name|default:'' }}">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Фамилия</label>
-                            <input class="form-control" name="last_name">
+                            <input class="form-control" name="last_name"
+                                value="{{ post_data.last_name|default:'' }}">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Логин</label>
-                        <input class="form-control" name="username">
+                        <input class="form-control" name="username"
+                            value="{{ post_data.username|default:'' }}">
                     </div>
 
                     <div class="mb-3">
@@ -44,14 +47,16 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Дата рождения</label>
-                            <input class="form-control" name="date_of_birth" placeholder="ДД.ММ.ГГГГ">
+                            <input class="form-control" name="date_of_birth" placeholder="ДД.ММ.ГГГГ"
+                                value="{{ post_data.date_of_birth|default:'' }}">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Пол</label>
                             <select class="form-select" name="gender">
                                 <option value="">— выберите —</option>
                                 {% for choice in gender_choices %}
-                                <option value="{{ choice }}">{{ choice }}</option>
+                                <option value="{{ choice }}"
+                                    {% if post_data.gender == choice %}selected{% endif %}>{{ choice }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -61,15 +66,76 @@
 
                     <div class="mb-3">
                         <label class="form-label">Должность</label>
-                        <input class="form-control" name="position">
+                        <input class="form-control" name="position"
+                            value="{{ post_data.position|default:'' }}">
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="form-label">Подразделение</label>
-                        <input class="form-control" name="department">
+                        <input class="form-control" name="department"
+                            value="{{ post_data.department|default:'' }}">
                     </div>
 
-                    <button class="btn btn-success w-100">
+                    <div class="mb-3">
+                        <label class="form-label">Тип сотрудника</label>
+                        <select class="form-select" name="employee_type" id="id_employee_type"
+                            required>
+                            <option value="">— выберите —</option>
+                            {% for value, label in employee_type_choices %}
+                            <option value="{{ value }}"
+                                {% if employee_type == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="block-technician" class="mb-3 employee-type-block">
+                        <div class="mb-3">
+                            <label class="form-label">Отдел</label>
+                            <input class="form-control" name="tech_department"
+                                value="{{ post_data.tech_department|default:'' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Разряд</label>
+                            <input class="form-control" name="tech_rank"
+                                value="{{ post_data.tech_rank|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div id="block-engineer" class="mb-3 employee-type-block">
+                        <div class="mb-3">
+                            <label class="form-label">Институт</label>
+                            <select class="form-select" name="institute">
+                                <option value="">— выберите —</option>
+                                {% for value, label in institute_choices %}
+                                <option value="{{ value }}"
+                                    {% if post_data.institute == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="block-developer" class="mb-3 employee-type-block">
+                        <div class="mb-3">
+                            <label class="form-label">Язык программирования</label>
+                            <select class="form-select" name="programming_language">
+                                <option value="">— выберите —</option>
+                                {% for value, label in programming_language_choices %}
+                                <option value="{{ value }}"
+                                    {% if post_data.programming_language == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Специализация</label>
+                            <input class="form-control" name="specialization"
+                                value="{{ post_data.specialization|default:'' }}"
+                                placeholder="Например: backend, тестирование">
+                        </div>
+                    </div>
+
+                    <div class="mb-4"></div>
+
+                    <button type="submit" class="btn btn-success w-100">
                         Зарегистрировать
                     </button>
                 </form>
@@ -77,4 +143,24 @@
         </div>
     </div>
 </div>
+<script>
+(function() {
+    var sel = document.getElementById('id_employee_type');
+    var blockTech = document.getElementById('block-technician');
+    var blockEng = document.getElementById('block-engineer');
+    var blockDev = document.getElementById('block-developer');
+    if (!sel) return;
+    function showBlocks() {
+        var v = sel.value;
+        blockTech.style.display = (v === 'техник') ? 'block' : 'none';
+        blockEng.style.display = (v === 'инженер') ? 'block' : 'none';
+        blockDev.style.display = (v === 'разработчик') ? 'block' : 'none';
+    }
+    document.querySelectorAll('.employee-type-block').forEach(function(el) {
+        el.style.display = 'none';
+    });
+    sel.addEventListener('change', showBlocks);
+    showBlocks();
+})();
+</script>
 {% endblock %}
