@@ -8,8 +8,10 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
-                {% if error %}
-                <div class="alert alert-danger" role="alert">{{ error }}</div>
+                {% if errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+                </div>
                 {% endif %}
                 <form method="post">
                     {% csrf_token %}

@@ -151,6 +151,28 @@ class RegisterViewTests(TestCase):
         self.assertContains(response, "Укажите пол")
         self.assertFalse(User.objects.filter(username="u").exists())
 
+    def test_register_empty_required_fields_shows_errors(self):
+        """При пустых обязательных полях отображаются сообщения об ошибках,
+        пользователь не создаётся."""
+        initial_count = User.objects.count()
+        response = self.client.post(
+            reverse("register"),
+            {
+                "username": "",
+                "password": "",
+                "password_confirm": "",
+                "first_name": "",
+                "last_name": "",
+                "date_of_birth": "",
+                "gender": "",
+                "position": "",
+                "department": "",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Заполните поле")
+        self.assertEqual(User.objects.count(), initial_count)
+
     def test_register_redirect_if_authenticated(self):
         """Авторизованные пользователи при GET /register/ перенаправляются на основной раздел."""
         self.client.login(username="existing_user", password="12345")
@@ -187,6 +209,15 @@ class LoginViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "core/login.html")
+
+    def test_login_empty_credentials_shows_error(self):
+        """При пустых логине и пароле отображается сообщение об ошибке."""
+        response = self.client.post(
+            reverse("login"),
+            {"username": "", "password": ""},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Введите логин и пароль")
 
 
 class LogoutViewTests(TestCase):

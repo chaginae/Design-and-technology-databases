@@ -18,10 +18,18 @@ class UserLoginView(View):
         return render(request, self.template_name)
 
     def post(self, request):
+        username = (request.POST.get("username") or "").strip()
+        password = request.POST.get("password") or ""
+        if not username or not password:
+            return render(
+                request,
+                self.template_name,
+                {"error": "Введите логин и пароль."},
+            )
         user = authenticate(
             request,
-            username=request.POST.get("username"),
-            password=request.POST.get("password"),
+            username=username,
+            password=password,
         )
         if user is not None:
             login(request, user)
@@ -49,6 +57,15 @@ class UserRegisterView(View):
     template_name = "core/register.html"
     success_url = reverse_lazy("login")
     gender_choices = ("Мужской", "Женский")
+    required_fields = (
+        ("username", "Логин"),
+        ("password", "Пароль"),
+        ("password_confirm", "Подтверждение пароля"),
+        ("first_name", "Имя"),
+        ("last_name", "Фамилия"),
+        ("position", "Должность"),
+        ("department", "Подразделение"),
+    )
 
     def get(self, request):
         if request.user.is_authenticated:
@@ -63,53 +80,49 @@ class UserRegisterView(View):
         if request.user.is_authenticated:
             return redirect("employees")
 
-        if request.POST.get("password") != request.POST.get("password_confirm"):
-            return render(
-                request,
-                self.template_name,
-                {"error": "Пароли не совпадают.", "gender_choices": self.gender_choices},
-            )
+        errors = []
+        post = request.POST
+
+        for field_name, label in self.required_fields:
+            raw = post.get(field_name) or ""
+            value = raw.strip() if field_name not in ("password", "password_confirm") else raw
+            if not value:
+                errors.append(f"Заполните поле «{label}».")
+
+        if post.get("password") != post.get("password_confirm"):
+            errors.append("Пароли не совпадают.")
 
         date_of_birth = None
-        raw_date = (request.POST.get("date_of_birth") or "").strip()
+        raw_date = (post.get("date_of_birth") or "").strip()
         if raw_date:
             try:
-                date_of_birth = datetime.strptime(
-                    raw_date, "%d.%m.%Y"
-                ).date()
+                date_of_birth = datetime.strptime(raw_date, "%d.%m.%Y").date()
             except ValueError:
-                return render(
-                    request,
-                    self.template_name,
-                    {
-                        "error": "Неверный формат даты. Используйте ДД.ММ.ГГГГ.",
-                        "gender_choices": self.gender_choices,
-                    },
-                )
+                errors.append("Неверный формат даты. Используйте ДД.ММ.ГГГГ.")
 
-        raw_gender = (request.POST.get("gender") or "").strip()
+        raw_gender = (post.get("gender") or "").strip()
         if raw_gender and raw_gender not in self.gender_choices:
+            errors.append("Укажите пол: Мужской или Женский.")
+        gender_value = raw_gender if raw_gender in self.gender_choices else ""
+
+        if errors:
             return render(
                 request,
                 self.template_name,
-                {
-                    "error": "Укажите пол: Мужской или Женский.",
-                    "gender_choices": self.gender_choices,
-                },
+                {"errors": errors, "gender_choices": self.gender_choices},
             )
-        gender_value = raw_gender if raw_gender in self.gender_choices else ""
 
         user = User.objects.create_user(
-            username=request.POST.get("username"),
-            password=request.POST.get("password"),
-            first_name=request.POST.get("first_name"),
-            last_name=request.POST.get("last_name"),
+            username=post.get("username").strip(),
+            password=post.get("password"),
+            first_name=post.get("first_name").strip(),
+            last_name=post.get("last_name").strip(),
         )
 
         Employee.objects.create(
             user=user,
-            position=request.POST.get("position"),
-            department=request.POST.get("department"),
+            position=post.get("position").strip(),
+            department=post.get("department").strip(),
             date_of_birth=date_of_birth,
             gender=gender_value,
         )
