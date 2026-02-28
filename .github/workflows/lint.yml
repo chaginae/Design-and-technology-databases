@@ -52,8 +52,15 @@ jobs:
             echo "UID=$(id -u)" >> $GITHUB_ENV
             echo "GID=$(id -g)" >> $GITHUB_ENV
 
+        - name: Make init-db scripts executable
+          run: chmod +x init-db/*.sh 2>/dev/null || true
+
         - name: Build and run containers
           run: docker compose up --build -d
+
+        - name: Show db logs on failure
+          if: failure()
+          run: docker compose logs db || true
 
         - name: Wait for db
           run: sleep 5
