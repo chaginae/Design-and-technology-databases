@@ -1,7 +1,7 @@
 -- Выполнить один раз вручную, если БД уже создана под postgres.
 -- Пароль в CREATE ROLE должен совпадать с POSTGRES_APP_PASSWORD в .env
 -- Команда (из каталога проекта, при запущенных контейнерах):
---   docker compose exec db psql -U postgres -d postgres -f /docker-entrypoint-initdb.d/grant-django-role-manual.sql
+--   cat scripts/grant-django-role-manual.sql | docker compose exec -T db psql -U postgres -d postgres
 -- Если попросит пароль — введите POSTGRES_PASSWORD из .env (пароль суперпользователя postgres).
 
 CREATE ROLE django_app WITH LOGIN PASSWORD '2580' CREATEDB;

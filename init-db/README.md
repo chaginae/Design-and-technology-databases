@@ -14,10 +14,10 @@
 
 Скрипты в `init-db` выполняются только при **первой** инициализации пустой БД. Если у вас уже есть volume с данными и таблицы созданы от `postgres`, роль `django_app` создана не будет.
 
-В этом случае один раз выполните вручную:
+В этом случае один раз выполните вручную (из каталога проекта):
 
 ```bash
-docker compose exec db psql -U postgres -d mydb -f /docker-entrypoint-initdb.d/grant-django-role-manual.sql
+cat scripts/grant-django-role-manual.sql | docker compose exec -T db psql -U postgres -d postgres
 ```
 
-Или скопируйте содержимое `grant-django-role-manual.sql`, подставьте свой пароль вместо `django_app_secret` и выполните в psql. Затем в `.env` задайте `POSTGRES_APP_PASSWORD` этим паролем и убедитесь, что сервис `web` подключается с `POSTGRES_USER=django_app` (см. docker-compose).
+Или скопируйте содержимое `scripts/grant-django-role-manual.sql`, подставьте свой пароль вместо `2580` и выполните в psql. Затем в `.env` задайте `POSTGRES_APP_PASSWORD` этим паролем и убедитесь, что сервис `web` подключается с `POSTGRES_USER=django_app` (см. docker-compose).
